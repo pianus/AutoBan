@@ -1,0 +1,10 @@
+# Personal data never goes into version control
+data/*
+!data/README.md
+# Editor / OS clutter
+*.bak
+*.tmp
+~$*
+Thumbs.db
+.DS_Store
+node_modules/
