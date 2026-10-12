@@ -3,6 +3,23 @@
 All notable changes to AutoBan are recorded here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [Semantic Versioning](https://semver.org/) — see design document §13.
 
+## [1.1.0] — 2026-10-12
+Data schema 5 (unchanged; files stay readable by 1.0).
+
+### Added
+- Top-level task grouping in the package: **Groups** button cycles a separator line, a colored rail along sub-tasks, both, or off (default: line).
+- **Hide done** in the package header hides completed top-level tasks with their sub-tasks.
+- **Collapse all / Expand all** in the Issues header; a collapsed issue shows only its title row and stage.
+- Auto-scroll while dragging a row near the top or bottom edge of the window.
+- Paste list accepts `@YYYY-MM-DD` and writes dates outside the shown week that way.
+
+### Changed
+- The package lists every task from every week, not only the current week; counts, Clear completed, Paste list and Export readable cover all tasks.
+- Paste list keeps item ids and attachments for unchanged titles.
+
+### Removed
+- Carry forward (open tasks now always stay in the package).
+
 ## [1.0.0] — 2026-10-05
 First formal release. Data schema 5.
 

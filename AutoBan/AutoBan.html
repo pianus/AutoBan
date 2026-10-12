@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  AutoBan v1.0.0 — weekly Kanban, month planner and issue tracker in one offline HTML file.
+  AutoBan v1.1.0 — weekly Kanban, month planner and issue tracker in one offline HTML file.
   Data schema 5. See docs/AutoBan_Design_Document_v1.0.md in the project folder.
 -->
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AutoBan</title>
 <meta name="application-name" content="AutoBan">
-<meta name="version" content="1.0.0">
+<meta name="version" content="1.1.0">
 <style>
   :root{
     --paper:#1B1F24; --panel:#23282F; --card:#2A3038; --card-2:#272D35; --card-3:#252A31;
@@ -362,12 +362,23 @@
   .cal-cell.out{opacity:1;background:transparent;box-shadow:none;border:1px dashed var(--rule)}
   @media (max-width:1320px){ .board{grid-template-columns:330px minmax(0,1fr)} }
   @media (max-width:900px){ .board{grid-template-columns:1fr} }
+
+  /* ---------- v1.1: top-level grouping in the package ---------- */
+  .package .task{position:relative}
+  .package.gs-line .task.t1sep{margin-top:11px}
+  .package.gs-line .task.ihdr.t1sep{margin-top:14px}
+  .package.gs-line .task.t1sep::after{content:"";position:absolute;left:-2px;right:-2px;top:-7px;height:1px;background:var(--ink-3);opacity:.7;pointer-events:none}
+  .package.gs-line .task.ihdr.t1sep::after{top:-8px}
+  .package.gs-rail .task.inrail::before{content:"";position:absolute;left:calc(9px - var(--ind,13px));top:-4px;bottom:-1px;width:2px;border-radius:1px;background:var(--vac);opacity:.8;pointer-events:none}
+  .package.gs-rail .task.inrail.act::before{background:var(--brass)}
+  .ihead .stagename{flex:none;margin-top:1px;font-family:var(--mono);font-size:9.5px;line-height:17px;color:var(--brass);white-space:nowrap}
+  .issue.closed .ihead{padding-bottom:7px}
 </style>
 </head>
 <body>
 <div class="shell">
   <header class="masthead">
-    <div class="brand" title="AutoBan v1.0.0">AutoBan<span>v1.0</span></div>
+    <div class="brand" title="AutoBan v1.1.0">AutoBan<span>v1.1</span></div>
     <div>
       <div class="mast-id" id="weekId">Week —</div>
       <div class="mast-week" id="weekRange">Loading…</div>
@@ -401,6 +412,7 @@
         <span class="panel-title">Package</span>
         <span class="head-tools">
           <span class="panel-note" id="pkgNote"></span>
+          <button class="ctrl" id="hideDoneTop" aria-pressed="false" title="Hide completed top-level tasks and their sub-tasks">Hide done</button>
           <button class="ctrl" id="modeBtn" aria-pressed="false">Paste list</button>
         </span>
       </div>
@@ -411,7 +423,7 @@
           <button class="apply-btn" id="applyBtn">Replace package</button>
           <button class="ctrl" id="cancelBtn">Cancel</button>
         </div>
-        <div class="legend"><b>Tab</b> = one level deeper (up to three) · <b>[x]</b> = done · <b>@Mon,Thu</b> = days</div>
+        <div class="legend"><b>Tab</b> = one level deeper (up to three) · <b>[x]</b> = done · <b>@Mon,Thu</b> = days this week · <b>@2026-11-03</b> = any date</div>
       </div>
       <div class="package" id="package"></div>
       <button class="addline" id="addLine">+ New task</button>
@@ -423,13 +435,14 @@
         <button class="ctrl" id="layoutBtn" aria-pressed="true">Two per row</button>
         <button class="ctrl" id="toggleScheduled" aria-pressed="false">Hide scheduled</button>
         <button class="ctrl" id="weekendBtn" aria-pressed="false">Show weekend</button>
-        <button class="ctrl" id="carryBtn">Carry forward</button>
+        <button class="ctrl" id="groupBtn" title="How top-level tasks are set apart in the package">Groups: line</button>
         <button class="ctrl" id="clearDone">Clear completed</button>
       </div>
 
       <p class="hint">Click any text to edit it · Enter = next item · Tab / Shift+Tab = indent / outdent · Backspace on an empty line removes it.<br>
       Drag a whole row to move it: onto another row (above or below it), onto a day to schedule, onto an issue section or issue header to file it there.<br>
-      Dragging a day item back onto the package or issue panel background unschedules it for this week.</p>
+      Dragging a day item back onto the package or issue panel background unschedules it for this week.<br>
+      The package holds every task, whichever week it was created in. Hold a dragged row near the top or bottom edge of the window to scroll.</p>
     </section>
 
     <section class="panel issues-panel" aria-label="Issue list">
@@ -437,6 +450,7 @@
         <span class="panel-title">Issues</span>
         <span class="head-tools">
           <span class="panel-note" id="issNote"></span>
+          <button class="ctrl" id="collapseIss" title="Collapse every issue to its title row">Collapse all</button>
           <button class="ctrl" id="hideRel" aria-pressed="false">Hide released</button>
           <button class="ctrl" id="newIssue">+ Issue</button>
         </span>
@@ -470,7 +484,7 @@
         <label class="ctrl">Import copy<input type="file" id="importFile" accept="application/json,.json" hidden></label>
         <button class="ctrl" id="mdBtn">Export readable</button>
         <span class="status" id="mode"></span>
-        <span class="appver">AutoBan v1.0.0 · data schema 5</span>
+        <span class="appver">AutoBan v1.1.0 · data schema 5</span>
       </div>
   </div>
 
@@ -491,7 +505,7 @@
 <script>
 (function(){
   "use strict";
-  var APP_NAME="AutoBan", APP_VERSION="1.0.0", SCHEMA=5;
+  var APP_NAME="AutoBan", APP_VERSION="1.1.0", SCHEMA=5;
 
   var DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   var KEYS=["M","T","W","T","F","S","S"];
@@ -499,7 +513,7 @@
   var SECTIONS=[["problem","Problem"],["containment","Containment"],["cause","Cause"],["solution","Solution"],["test","Test"],["release","Release"]];
   var SEC_CODE={problem:"PRB",containment:"CNT",cause:"CAU",solution:"SOL",test:"TST",release:"REL"};
 
-  var state={weekStart:null,month:null,tasks:[],settings:{showWeekend:false,pairs:true,hideReleased:false,tab:"week",monthScope:"month"},issues:{seq:0,list:[]}};
+  var state={weekStart:null,month:null,tasks:[],settings:{showWeekend:false,pairs:true,hideReleased:false,tab:"week",monthScope:"month",groupStyle:"line",hideDoneTop:false},issues:{seq:0,list:[]}};
   var textMode=false, pendingFocus=null, fileHandle=null;
   var editing=null, editCaret=null, rendering=false, pointerDown=false, renderQueued=false;
 
@@ -600,7 +614,7 @@
       var w=doc.weeks[k]; weeks[ws]={tasks:(w&&Array.isArray(w.tasks))?clone(w.tasks):[]};
     });
     data.weeks=weeks;
-    state.settings={showWeekend:false,pairs:true,hideReleased:false,tab:"week",monthScope:"month"};
+    state.settings={showWeekend:false,pairs:true,hideReleased:false,tab:"week",monthScope:"month",groupStyle:"line",hideDoneTop:false};
     if(doc&&doc.settings) Object.keys(doc.settings).forEach(function(k){ state.settings[k]=doc.settings[k]; });
     state.issues=(doc&&doc.issues&&Array.isArray(doc.issues.list))?clone(doc.issues):{seq:0,list:[]};
     fixIssues();
@@ -665,6 +679,10 @@
   }
   function weekKeys(){ var k=Object.keys(data.weeks); if(k.indexOf(state.weekStart)===-1) k.push(state.weekStart); return k.sort(); }
   function eachTask(fn){ weekKeys().forEach(function(ws){ var arr=weekTasks(ws); arr.slice().forEach(function(t){ fn(t,arr,ws); }); }); }
+  /* the package spans every week: a task keeps the week it was created in only as its storage slot */
+  function taskLists(){ return weekKeys().map(function(ws){ return {ws:ws,arr:weekTasks(ws)}; }); }
+  function allTasks(){ var o=[]; taskLists().forEach(function(l){ o=o.concat(l.arr); }); return o; }
+  function tailList(){ var L=taskLists().filter(function(l){ return l.arr.length; }); return L.length?L[L.length-1]:{ws:state.weekStart,arr:state.tasks}; }
   function fromDate(p){ var m=(p.from||"").match(/^[dm]:(\d{4}-\d\d-\d\d)$/); return m?m[1]:null; }
   function removeDate(it,d){ var i=it.dates.indexOf(d); if(i>-1) it.dates.splice(i,1); }
 
@@ -882,9 +900,9 @@
   /* ---------- text outline (paste) ---------- */
   function serialize(){
     var w=weekIsos();
-    return state.tasks.map(function(t){
-      var days=t.dates.map(function(d){ return w.indexOf(d); }).filter(function(x){ return x>-1; });
-      return new Array(t.lvl+1).join("\t")+(t.done?"[x] ":"")+t.title+(days.length?" @"+days.map(function(d){ return DAYS[d]; }).join(","):"");
+    return allTasks().map(function(t){
+      var tags=t.dates.map(function(d){ var i=w.indexOf(d); return i>-1?DAYS[i]:d; });
+      return new Array(t.lvl+1).join("\t")+(t.done?"[x] ":"")+t.title+(tags.length?" @"+tags.join(","):"");
     }).join("\n");
   }
   function parse(text){
@@ -895,9 +913,10 @@
       var d=Math.min((lead.match(/\t/g)||[]).length||Math.floor(lead.length/2),MAXDEPTH);
       var s=raw.replace(/^[\s\t]+/,"").replace(/^[-*•]\s+/,""), done=false, dates=[];
       s=s.replace(/^\[(x|X|✓)\]\s*/,function(){ done=true; return ""; }).replace(/^\[\s?\]\s*/,"");
-      s=s.replace(/\s*@([A-Za-z, ]+)$/,function(m,g){
+      s=s.replace(/\s*@([A-Za-z0-9, \-]+)$/,function(m,g){
         var hit=false;
         g.split(",").forEach(function(tok){
+          if(/^\d{4}-\d\d-\d\d$/.test(tok.trim())){ if(dates.indexOf(tok.trim())===-1){ dates.push(tok.trim()); hit=true; } return; }
           var i=DAYS.map(function(x){ return x.toLowerCase(); }).indexOf(tok.trim().slice(0,3).toLowerCase());
           if(i>-1){ var di=dayIso(i); if(dates.indexOf(di)===-1){ dates.push(di); hit=true; } }
         });
@@ -921,7 +940,14 @@
     el("modeBtn").setAttribute("aria-pressed","false"); el("modeBtn").textContent="Paste list";
     render();
   }
-  function applyText(){ state.tasks=parse(el("outline").value); save(); exitTextMode(); }
+  function applyText(){
+    var old=allTasks(), used={}, list=parse(el("outline").value);
+    list.forEach(function(n){
+      for(var i=0;i<old.length;i++){ var o=old[i]; if(!used[o.id]&&o.title===n.title){ used[o.id]=1; n.id=o.id; if(o.att&&o.att.length) n.att=o.att; break; } }
+    });
+    Object.keys(data.weeks).forEach(function(ws){ if(ws!==state.weekStart) data.weeks[ws]={tasks:[]}; });
+    state.tasks=list; save(); exitTextMode();
+  }
 
   /* ---------- render ---------- */
   function render(){
@@ -931,12 +957,12 @@
       var ws=fromIso(state.weekStart);
       el("weekId").textContent="Week "+isoWeekNo(ws)+" · "+ws.getFullYear();
       el("weekRange").textContent=fmt(ws)+" – "+fmt(addDays(ws,6));
-      var done=state.tasks.filter(function(t){ return t.done; }).length, total=state.tasks.length;
+      var every=allTasks(), done=every.filter(function(t){ return t.done; }).length, total=every.length;
       var openActs=0, openIss=0;
       state.issues.list.forEach(function(is){ if(stageOf(is)<SECTIONS.length) openIss++; });
       forEachSection(function(is,sk,sec){ sec.actions.forEach(function(a){ if(!a.done) openActs++; }); });
       el("tally").innerHTML=(total?("<b>"+done+"</b> of "+total+" tasks done"):"")+(openIss?(total?" · ":"")+openIss+" open issue"+(openIss>1?"s":""):"");
-      el("pkgNote").textContent=(total||state.issues.list.length)?(total+" tasks · "+state.issues.list.length+" issues"):"empty";
+      el("pkgNote").textContent=(total||state.issues.list.length)?(total+" tasks"+(state.issues.list.length?" · "+state.issues.list.length+" issues":"")):"empty";
       el("issNote").textContent=state.issues.list.length?(openIss+" open · "+openActs+" actions"):"";
       var month=state.settings.tab==="month";
       el("weekBoard").hidden=month; el("monthBoard").hidden=!month;
@@ -1129,27 +1155,45 @@
 
   function renderPackage(){
     var host=el("package"); host.innerHTML="";
-    var hide=el("toggleScheduled").getAttribute("aria-pressed")==="true";
+    var gs=state.settings.groupStyle||"line";
+    host.className="package"+(gs==="line"||gs==="both"?" gs-line":"")+(gs==="rail"||gs==="both"?" gs-rail":"");
+    var hide=el("toggleScheduled").getAttribute("aria-pressed")==="true", hideDone=!!state.settings.hideDoneTop;
     var w=weekIsos();
     function skip(arr,it){ return hide&&it.dates.some(function(d){ return w.indexOf(d)>-1; })&&!kidsIn(arr,it).length; }
-    var issues=visibleIssues();
-    if(!state.tasks.length&&!issues.length){
+    var issues=visibleIssues(), lists=taskLists(), tops=0, hiddenDone=0;
+    if(!allTasks().length&&!issues.length){
       var e=document.createElement("div"); e.className="empty";
       e.textContent="Empty — + New task, or open an issue on the right.";
       host.appendChild(e); return;
     }
-    state.tasks.forEach(function(it){
-      if(skip(state.tasks,it)) return;
-      host.appendChild(itemRow({it:it,arr:state.tasks,ctx:{kind:"task"},view:"pkg",indent:it.lvl}));
+    /* top-level rows get a separator above them; deeper rows carry the group rail */
+    function add(row,indent){
+      if(!indent){ if(tops) row.classList.add("t1sep"); tops++; }
+      else { row.classList.add("inrail"); row.style.setProperty("--ind",(indent*13)+"px"); }
+      host.appendChild(row);
+    }
+    lists.forEach(function(l){
+      var hiding=false;
+      l.arr.forEach(function(it){
+        if(it.lvl===0){ hiding=hideDone&&it.done; if(hiding) hiddenDone++; }
+        if(hiding||skip(l.arr,it)) return;
+        add(itemRow({it:it,arr:l.arr,ctx:{kind:"task",ws:l.ws},view:"pkg",indent:it.lvl}),it.lvl);
+      });
     });
+    if(hiddenDone){
+      var hn=document.createElement("button"); hn.className="addline"; hn.id="hiddenDoneNote";
+      hn.textContent=hiddenDone+" completed task"+(hiddenDone>1?"s":"")+" hidden · show";
+      hn.addEventListener("click",function(){ state.settings.hideDoneTop=false; syncButtons(); save(); render(); });
+      host.appendChild(hn);
+    }
     issues.forEach(function(is){
-      host.appendChild(issueHeaderRow(is));
+      add(issueHeaderRow(is),0);
       if(is.pkgCollapsed) return;
       SECTIONS.forEach(function(s){
         var arr=is.sec[s[0]].actions;
         arr.forEach(function(a){
           if(skip(arr,a)) return;
-          host.appendChild(itemRow({it:a,arr:arr,ctx:{kind:"action",is:is,sk:s[0]},view:"pkg",indent:a.lvl+1,secTag:a.lvl===0?SEC_CODE[s[0]]:null}));
+          add(itemRow({it:a,arr:arr,ctx:{kind:"action",is:is,sk:s[0]},view:"pkg",indent:a.lvl+1,secTag:a.lvl===0?SEC_CODE[s[0]]:null}),a.lvl+1);
         });
       });
     });
@@ -1208,6 +1252,8 @@
   function renderIssues(){
     var host=el("issues"); host.innerHTML="";
     var L=visibleIssues();
+    var cb=el("collapseIss"); cb.hidden=!L.length;
+    cb.textContent=L.some(function(is){ return is.open; })?"Collapse all":"Expand all";
     if(!L.length){
       var e=document.createElement("div"); e.className="empty";
       e.textContent=state.issues.list.length?"All issues released.":"No issues yet — + Issue to open one.";
@@ -1219,11 +1265,12 @@
   function issueCard(is){
     var st=stageOf(is);
     var card=document.createElement("div");
-    card.className="issue"+(st===SECTIONS.length?" released":"");
+    card.className="issue"+(st===SECTIONS.length?" released":"")+(is.open?"":" closed");
 
     var head=document.createElement("div"); head.className="ihead";
     var chev=document.createElement("button");
-    chev.className="chev"; chev.textContent=is.open?"▾":"▸"; chev.title=is.open?"Collapse":"Expand";
+    chev.className="chev"; chev.textContent=is.open?"▾":"▸"; chev.title=is.open?"Collapse to title":"Expand";
+    chev.setAttribute("aria-expanded",is.open?"true":"false");
     chev.addEventListener("click",function(){ is.open=!is.open; save(); render(); });
     head.appendChild(chev);
     var num=document.createElement("span"); num.className="inum"; num.textContent=inum(is); head.appendChild(num);
@@ -1234,6 +1281,7 @@
       if(ev.key==="Enter"){ ev.preventDefault(); if(!is.open){ is.open=true; save(); } pendingFocus="notes-"+is.id+"-problem"; render(); }
     });
     head.appendChild(ttl);
+    if(!is.open){ var sn=document.createElement("span"); sn.className="stagename"; sn.textContent=st===SECTIONS.length?"Released":SECTIONS[st][1]; head.appendChild(sn); }
     head.appendChild(mkDel("Delete issue",function(){
       if(!confirm("Delete "+inum(is)+(is.title?' "'+is.title+'"':"")+" and all its actions?")) return;
       state.issues.list.splice(state.issues.list.indexOf(is),1); save(); render();
@@ -1249,7 +1297,7 @@
     var lbl=document.createElement("span"); lbl.className="stage-lbl";
     lbl.textContent=st===SECTIONS.length?"Released":SECTIONS[st][1];
     stages.appendChild(lbl);
-    card.appendChild(stages);
+    if(is.open) card.appendChild(stages);
 
     if(is.open){
       SECTIONS.forEach(function(s,i){
@@ -1666,7 +1714,8 @@
     function pad(l){ return new Array(l+1).join("  "); }
     out.push("# AutoBan report — Week "+isoWeekNo(ws)+" ("+fmt(ws)+" – "+fmt(addDays(ws,6))+", "+ws.getFullYear()+")","");
     out.push("## Tasks","");
-    if(!state.tasks.length) out.push("_No tasks._");
+    var every=allTasks();
+    if(!every.length) out.push("_No tasks._");
     function atts(it,l){ (it.att||[]).forEach(function(a){
       if(a.kind==="table"){
         out.push(pad(l+1)+"- Table: "+a.title,"");
@@ -1678,7 +1727,7 @@
       } else out.push(pad(l+1)+"- Attachment: "+a.title+(a.url?" <"+a.url+">":(a.file?" (attachments folder: "+a.file+")":" (embedded)")));
     }); }
 
-    state.tasks.forEach(function(t){ out.push(pad(t.lvl)+"- ["+(t.done?"x":" ")+"] "+(t.title||"(untitled)")+dl(t.dates)); atts(t,t.lvl); });
+    every.forEach(function(t){ out.push(pad(t.lvl)+"- ["+(t.done?"x":" ")+"] "+(t.title||"(untitled)")+dl(t.dates)); atts(t,t.lvl); });
     out.push("","## Issues","");
     if(!state.issues.list.length) out.push("_No issues._");
     state.issues.list.forEach(function(is){
@@ -1718,7 +1767,10 @@
     el("weekendBtn").setAttribute("aria-pressed",s.showWeekend?"true":"false");
     el("weekendBtn").textContent=s.showWeekend?"Hide weekend":"Show weekend";
     el("hideRel").setAttribute("aria-pressed",s.hideReleased?"true":"false");
+    el("hideDoneTop").setAttribute("aria-pressed",s.hideDoneTop?"true":"false");
+    el("groupBtn").textContent="Groups: "+(GROUP_LABEL[s.groupStyle]||GROUP_LABEL.line);
   }
+  var GROUP_STYLES=["line","rail","both","none"], GROUP_LABEL={line:"line",rail:"rail",both:"line + rail",none:"off"};
 
   /* ---------- events ---------- */
   document.addEventListener("pointerdown",function(){ pointerDown=true; },true);
@@ -1730,9 +1782,28 @@
   document.addEventListener("pointercancel",pointerDone,true);
   document.addEventListener("dragend",pointerDone,true);
 
+  /* auto-scroll: holding a dragged row near the top or bottom edge scrolls the page */
+  var dragY=null, scrollRaf=null, EDGE=80, MAXSPEED=24;
+  function edgeSpeed(y,h){
+    y=Math.max(0,Math.min(h,y));
+    if(y<EDGE) return -Math.ceil((EDGE-y)/EDGE*MAXSPEED);
+    if(y>h-EDGE) return Math.ceil((y-(h-EDGE))/EDGE*MAXSPEED);
+    return 0;
+  }
+  function scrollTick(){
+    scrollRaf=null;
+    if(dragY!==null){ var v=edgeSpeed(dragY,window.innerHeight); if(v) window.scrollBy(0,v); }
+    scrollRaf=requestAnimationFrame(scrollTick);
+  }
+  function stopAutoScroll(){ dragY=null; if(scrollRaf){ cancelAnimationFrame(scrollRaf); scrollRaf=null; } }
+  document.addEventListener("dragstart",function(){ dragY=null; if(!scrollRaf) scrollRaf=requestAnimationFrame(scrollTick); },true);
+  document.addEventListener("dragover",function(ev){ if(scrollRaf) dragY=ev.clientY; },true);
+  document.addEventListener("dragend",stopAutoScroll,true);
+  document.addEventListener("drop",stopAutoScroll,true);
+
   el("addLine").addEventListener("click",function(){
     var n={id:uid("t"),title:"",done:false,dates:[],lvl:0};
-    state.tasks.push(n); editing="pkg:"+n.id; editCaret=0; save(); render();
+    tailList().arr.push(n); editing="pkg:"+n.id; editCaret=0; save(); render();
   });
   el("modeBtn").addEventListener("click",function(){ textMode?exitTextMode():enterTextMode(); });
   el("applyBtn").addEventListener("click",applyText);
@@ -1752,9 +1823,10 @@
 
   zone(el("package"),"over",function(p){
     var f=findItem(p.id); if(!f) return;
+    var tail=tailList().arr;
     if(fromDate(p)) removeDate(f.it,fromDate(p));
-    else if(f.arr===state.tasks&&f.arr.indexOf(f.it)+1+subIn(f.arr,f.it).length===f.arr.length) return;
-    else moveItem(p.id,state.tasks,null,"end",0);
+    else if(f.arr===tail&&f.arr.indexOf(f.it)+1+subIn(f.arr,f.it).length===f.arr.length) return;
+    else moveItem(p.id,tail,null,"end",0);
     save(); render();
   });
   zone(el("issues"),"over",function(p){
@@ -1782,23 +1854,24 @@
   el("layoutBtn").addEventListener("click",function(){ state.settings.pairs=!state.settings.pairs; syncButtons(); save(); render(); });
   el("weekendBtn").addEventListener("click",function(){ state.settings.showWeekend=!state.settings.showWeekend; syncButtons(); save(); render(); });
   el("hideRel").addEventListener("click",function(){ state.settings.hideReleased=!state.settings.hideReleased; syncButtons(); save(); render(); });
-  el("clearDone").addEventListener("click",function(){
-    var n=state.tasks.filter(function(t){ return t.done; }).length;
-    if(!n){ setStatus("Nothing completed yet"); return; }
-    if(!confirm("Remove "+n+" completed task(s) from this week? Issue actions are not affected.")) return;
-    state.tasks=state.tasks.filter(function(t){ return !t.done; });
-    fixLevels(state.tasks); save(); render();
+  el("hideDoneTop").addEventListener("click",function(){ state.settings.hideDoneTop=!state.settings.hideDoneTop; syncButtons(); save(); render(); });
+  el("groupBtn").addEventListener("click",function(){
+    var i=GROUP_STYLES.indexOf(state.settings.groupStyle); state.settings.groupStyle=GROUP_STYLES[(i+1)%GROUP_STYLES.length];
+    syncButtons(); save(); render();
   });
-  el("carryBtn").addEventListener("click",function(){
-    var prev=iso(addDays(fromIso(state.weekStart),-7));
-    var w=data.weeks[prev];
-    if(!w||!w.tasks||!w.tasks.length){ setStatus("Nothing in the previous week"); return; }
-    var prevTasks=migrateTasks(clone(w.tasks),prev);
-    var open=prevTasks.filter(function(t){ return !t.done; });
-    if(!open.length){ setStatus("Last week finished clean"); return; }
-    open.forEach(function(t){ state.tasks.push({id:uid("t"),title:t.title,done:false,dates:[],lvl:t.lvl}); });
-    fixLevels(state.tasks); save(); render();
-    setStatus("Carried "+open.length+" task(s) forward","good");
+  el("collapseIss").addEventListener("click",function(){
+    var L=visibleIssues(), open=!L.some(function(is){ return is.open; });
+    L.forEach(function(is){ is.open=open; }); save(); render();
+  });
+  el("clearDone").addEventListener("click",function(){
+    var n=allTasks().filter(function(t){ return t.done; }).length;
+    if(!n){ setStatus("Nothing completed yet"); return; }
+    if(!confirm("Remove "+n+" completed task(s) from the package? Issue actions are not affected.")) return;
+    taskLists().forEach(function(l){
+      var keep=l.arr.filter(function(t){ return !t.done; }); fixLevels(keep);
+      data.weeks[l.ws]={tasks:keep}; if(l.ws===state.weekStart) state.tasks=keep;
+    });
+    save(); render();
   });
 
   el("exportBtn").addEventListener("click",async function(){
