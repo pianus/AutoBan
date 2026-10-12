@@ -20,3 +20,4 @@ Run before every release in Chrome or Edge, using a **throwaway** data file (e.g
 | 14 | Sync | Edit the JSON on another machine (or edit `savedAt`/title in Notepad and save), return to the tab. | Page reloads the external change. |
 | 15 | Export | Export copy; Export readable. | `autoban-backup-…json`, `autoban-report-…md` with attachments listed. |
 | 16 | Import | Import the backup into a fresh browser profile. | Identical board. |
+| 17 | Type into a day | Click + Add task under Wed, type a title, Enter, type another, Escape. | Both appear under Wed and at the end of the package with W marked; the package row fills in while typing. |

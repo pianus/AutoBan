@@ -1,5 +1,6 @@
 // AutoBan smoke test (jsdom): migration, outline editing, issue mirroring, drag/drop, month view,
-// v1.1 package across weeks, grouping styles, hide done, collapse issues, drag auto-scroll.
+// v1.1 package across weeks, grouping styles, hide done, collapse issues, drag auto-scroll,
+// v1.2 typing tasks straight into a day column.
 const { JSDOM } = require('jsdom');
 const fs = require('fs'), path = require('path'), assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '../../src/autoban.html'), 'utf8');
@@ -106,6 +107,25 @@ const cache = () => JSON.parse(w.localStorage.getItem('wp:cache'));
   d.getElementById('modeBtn').click(); await sleep(10);
   assert.ok(d.getElementById('outline').value.includes('Old task @' + oldDate)); d.getElementById('cancelBtn').click(); await sleep(10);
   pass('replace package keeps those dates');
+  // ---- v1.2: type tasks straight into a day column ----
+  const tue = shift(monday, 1), dayTitles = i => [...d.querySelectorAll('.day')[i].querySelectorAll('.task .tt, .task textarea')].map(n => n.value !== undefined && n.tagName === 'TEXTAREA' ? n.value : n.textContent);
+  const before = cache().weeks ? Object.values(cache().weeks).reduce((n, wk) => n + wk.tasks.length, 0) : 0;
+  assert.strictEqual(d.querySelectorAll('.day .dayadd').length, 5); pass('every weekday column has + Add task');
+  d.querySelectorAll('.day')[1].querySelector('.dayadd').click(); await sleep(10);
+  assert.ok(d.activeElement.tagName === 'TEXTAREA' && d.querySelectorAll('.day')[1].contains(d.activeElement)); pass('+ Add task opens a text box in that day');
+  type('Call vendor'); await sleep(5);
+  assert.ok(pkgRow('Call vendor')); pass('package shows the task while it is typed');
+  key('Enter'); await sleep(10);
+  assert.ok(d.querySelectorAll('.day')[1].contains(d.activeElement)); type('Book room'); blur(); await sleep(20);
+  assert.deepStrictEqual(dayTitles(1).slice(-2), ['Call vendor', 'Book room']); pass('Enter starts the next task in the same day');
+  assert.ok(pkgRows().includes('0:Call vendor') && pkgRows().includes('0:Book room')); pass('typed tasks appear in the package as top-level tasks');
+  assert.ok(pkgRow('Book room').querySelector('.dstrip button:nth-child(2)').getAttribute('aria-pressed') === 'true'); pass('package day strip marks the typed day');
+  d.querySelectorAll('.day')[4].querySelector('.dayadd').click(); await sleep(10); blur(); await sleep(20);
+  assert.ok(!pkgRows().includes('0:Click to type') && d.querySelectorAll('.day')[4].querySelectorAll('.task').length === 0); pass('an empty typed task is discarded');
+  await sleep(300); const all = Object.values(cache().weeks).reduce((a, wk) => a.concat(wk.tasks), []);
+  assert.strictEqual(all.length, before + 2); assert.deepStrictEqual(all.find(t => t.title === 'Book room').dates, [tue]); pass('typed tasks saved with their date');
+  pkgRow('Call vendor').querySelector('.box').click(); await sleep(10);
+  assert.ok(d.querySelectorAll('.day')[1].querySelector('.task.done')); pass('ticking it in the package ticks it in the day');
   // file format stays schema 5
   await sleep(300); const doc = cache();
   assert.strictEqual(doc.version, 5); assert.ok(doc.weeks && typeof doc.weeks === 'object' && doc.settings.groupStyle === 'line');

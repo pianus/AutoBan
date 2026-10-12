@@ -3,6 +3,13 @@
 All notable changes to AutoBan are recorded here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [Semantic Versioning](https://semver.org/) — see design document §13.
 
+## [1.2.0] — 2026-10-12
+Data schema 5 (unchanged; files stay readable by 1.0 and 1.1).
+
+### Added
+- **+ Add task** at the bottom of each day column: type a task straight into that day. It joins the end of the package, scheduled on that day, and the package row updates as you type.
+- Enter in a day column starts the next task for the same day; Escape or clicking away finishes; an empty entry is discarded.
+
 ## [1.1.0] — 2026-10-12
 Data schema 5 (unchanged; files stay readable by 1.0).
 
