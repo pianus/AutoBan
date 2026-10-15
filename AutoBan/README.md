@@ -2,7 +2,7 @@
 
 Weekly Kanban, month planner and issue tracker in one offline HTML file.
 
-**Current release: v1.2.0** · data schema 5 · see [`docs/release-notes/AutoBan_v1.2.0_Release_Notes.md`](docs/release-notes/AutoBan_v1.2.0_Release_Notes.md)
+**Current release: v1.3.0** · data schema 5 · see [`docs/release-notes/AutoBan_v1.3.0_Release_Notes.md`](docs/release-notes/AutoBan_v1.3.0_Release_Notes.md)
 
 ## Quick start
 
@@ -17,7 +17,7 @@ Everything saves automatically. On another machine, open `AutoBan.html` and choo
 ```
 AutoBan/
 ├── AutoBan.html                 ← open this (current release)
-├── VERSION                      ← 1.2.0
+├── VERSION                      ← 1.3.0
 ├── README.md
 ├── CHANGELOG.md
 ├── docs/
@@ -25,11 +25,13 @@ AutoBan/
 │   └── release-notes/
 │       ├── AutoBan_v1.0.0_Release_Notes.md
 │       ├── AutoBan_v1.1.0_Release_Notes.md
-│       └── AutoBan_v1.2.0_Release_Notes.md
+│       ├── AutoBan_v1.2.0_Release_Notes.md
+│       └── AutoBan_v1.3.0_Release_Notes.md
 ├── releases/
 │   ├── AutoBan_v1.0.0.html      ← frozen copy of each release
 │   ├── AutoBan_v1.1.0.html
-│   └── AutoBan_v1.2.0.html
+│   ├── AutoBan_v1.2.0.html
+│   └── AutoBan_v1.3.0.html
 ├── src/
 │   └── autoban.html             ← working source (history tracked in Git)
 ├── tests/
@@ -40,7 +42,7 @@ AutoBan/
 
 ## Version control
 
-The folder is a Git repository (`main` branch, tag per release: `v0.5.0` … `v1.2.0`).
+The folder is a Git repository (`main` branch, tag per release: `v0.5.0` … `v1.3.0`).
 
 ```bash
 git log --oneline --decorate     # history

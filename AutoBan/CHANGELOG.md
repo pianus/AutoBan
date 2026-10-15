@@ -3,6 +3,17 @@
 All notable changes to AutoBan are recorded here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [Semantic Versioning](https://semver.org/) — see design document §13.
 
+## [1.3.0] — 2026-10-13
+Data schema 5 (unchanged; files stay readable by 1.0, 1.1 and 1.2, which keep notes when they save).
+
+### Added
+- **Note** box at the top of every task's attachment panel: type a note straight in; it saves as you type, Enter adds a line.
+- A dot next to the paperclip marks tasks that have a note.
+- Notes appear in Export readable and are kept by Paste list.
+
+### Fixed
+- Month-view smoke test no longer fails when today already has a task.
+
 ## [1.2.0] — 2026-10-12
 Data schema 5 (unchanged; files stay readable by 1.0 and 1.1).
 

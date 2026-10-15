@@ -21,3 +21,4 @@ Run before every release in Chrome or Edge, using a **throwaway** data file (e.g
 | 15 | Export | Export copy; Export readable. | `autoban-backup-…json`, `autoban-report-…md` with attachments listed. |
 | 16 | Import | Import the backup into a fresh browser profile. | Identical board. |
 | 17 | Type into a day | Click + Add task under Wed, type a title, Enter, type another, Escape. | Both appear under Wed and at the end of the package with W marked; the package row fills in while typing. |
+| 18 | Task note | Paperclip on a task → type two lines in Note → Escape twice → reload → reopen. | Note kept with both lines; dot shown next to the paperclip; note listed in Export readable. |

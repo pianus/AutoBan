@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  AutoBan v1.2.0 — weekly Kanban, month planner and issue tracker in one offline HTML file.
+  AutoBan v1.3.0 — weekly Kanban, month planner and issue tracker in one offline HTML file.
   Data schema 5. See docs/AutoBan_Design_Document_v1.0.md in the project folder.
 -->
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AutoBan</title>
 <meta name="application-name" content="AutoBan">
-<meta name="version" content="1.2.0">
+<meta name="version" content="1.3.0">
 <style>
   :root{
     --paper:#1B1F24; --panel:#23282F; --card:#2A3038; --card-2:#272D35; --card-3:#252A31;
@@ -328,6 +328,11 @@
   .dr-row input{flex:1;min-width:0;background:var(--card);border:1px solid var(--rule);border-radius:5px;padding:6px 9px;font-size:12.5px}
   .dr-row input:focus{outline:none;border-color:var(--vac);box-shadow:0 0 0 3px var(--focus-ring)}
   .dr-hint{font-size:11px;color:var(--ink-3)}
+  .dr-note{margin-bottom:12px}
+  .dr-note label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--ink-3);margin-bottom:4px}
+  .dr-note textarea{display:block;width:100%;box-sizing:border-box;min-height:72px;max-height:50vh;resize:vertical;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:7px 9px;font:inherit;font-size:12.5px;line-height:1.45;color:var(--ink)}
+  .dr-note textarea:focus{outline:none;border-color:var(--vac);box-shadow:0 0 0 3px var(--focus-ring)}
+  .clip .nd{width:5px;height:5px;border-radius:50%;background:currentColor;margin-left:2px}
   .dr-tables{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
   .att-table{position:relative;border-radius:6px;background:var(--card);box-shadow:var(--lift);padding:7px 8px 8px}
   .att-table .tt-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;padding-right:24px}
@@ -379,7 +384,7 @@
 <body>
 <div class="shell">
   <header class="masthead">
-    <div class="brand" title="AutoBan v1.2.0">AutoBan<span>v1.2</span></div>
+    <div class="brand" title="AutoBan v1.3.0">AutoBan<span>v1.3</span></div>
     <div>
       <div class="mast-id" id="weekId">Week —</div>
       <div class="mast-week" id="weekRange">Loading…</div>
@@ -485,7 +490,7 @@
         <label class="ctrl">Import copy<input type="file" id="importFile" accept="application/json,.json" hidden></label>
         <button class="ctrl" id="mdBtn">Export readable</button>
         <span class="status" id="mode"></span>
-        <span class="appver">AutoBan v1.2.0 · data schema 5</span>
+        <span class="appver">AutoBan v1.3.0 · data schema 5</span>
       </div>
   </div>
 
@@ -494,7 +499,7 @@
 <aside class="drawer" id="drawer" hidden aria-label="Attachments">
   <div class="dr-head"><div><div class="dr-kicker" id="drKicker"></div><div class="dr-title" id="drTitle"></div></div><button class="dr-x" id="drClose" aria-label="Close attachments">×</button></div>
   <div class="dr-folder" id="drFolder"></div>
-  <div class="dr-body"><div class="dr-tables" id="drTables"></div><div class="dr-grid" id="drGrid"></div><div class="att-links" id="drFiles"></div><div class="att-links" id="drLinks"></div></div>
+  <div class="dr-body"><div class="dr-note"><label for="drNote">NOTE</label><textarea id="drNote" spellcheck="true" placeholder="Type a note for this task…"></textarea></div><div class="dr-tables" id="drTables"></div><div class="dr-grid" id="drGrid"></div><div class="att-links" id="drFiles"></div><div class="att-links" id="drLinks"></div></div>
   <div class="dr-add">
     <div class="dr-row"><input id="drUrl" type="text" spellcheck="false" placeholder="https://…, a SharePoint link, or \\server\share\file"><button class="apply-btn" id="drAddLink">Add link</button></div>
     <div class="dr-row"><button class="ctrl" id="drAddMedia">Add files…</button><input type="file" id="drFile" multiple hidden></div>
@@ -506,7 +511,7 @@
 <script>
 (function(){
   "use strict";
-  var APP_NAME="AutoBan", APP_VERSION="1.2.0", SCHEMA=5;
+  var APP_NAME="AutoBan", APP_VERSION="1.3.0", SCHEMA=5;
 
   var DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   var KEYS=["M","T","W","T","F","S","S"];
@@ -944,7 +949,7 @@
   function applyText(){
     var old=allTasks(), used={}, list=parse(el("outline").value);
     list.forEach(function(n){
-      for(var i=0;i<old.length;i++){ var o=old[i]; if(!used[o.id]&&o.title===n.title){ used[o.id]=1; n.id=o.id; if(o.att&&o.att.length) n.att=o.att; break; } }
+      for(var i=0;i<old.length;i++){ var o=old[i]; if(!used[o.id]&&o.title===n.title){ used[o.id]=1; n.id=o.id; if(o.att&&o.att.length) n.att=o.att; if(o.note) n.note=o.note; break; } }
     });
     Object.keys(data.weeks).forEach(function(ws){ if(ws!==state.weekStart) data.weeks[ws]={tasks:[]}; });
     state.tasks=list; save(); exitTextMode();
@@ -1360,10 +1365,11 @@
   var LINK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1 1"/><path d="M14 10a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1-1"/></svg>';
   function hasFiles(ev){ try{ return Array.prototype.indexOf.call(ev.dataTransfer.types||[],"Files")>-1; }catch(e){ return false; } }
   function attOf(it){ if(!Array.isArray(it.att)) it.att=[]; return it.att; }
+  function hasNote(it){ return typeof it.note==="string"&&it.note.trim()!==""; }
   function clipBtn(it){
-    var n=(it.att||[]).length, b=document.createElement("button");
-    b.type="button"; b.className="clip"+(n?" has":""); b.innerHTML=CLIP+(n?"<span>"+n+"</span>":"");
-    b.title=n?n+" attachment"+(n>1?"s":""):"Add attachment";
+    var n=(it.att||[]).length, nt=hasNote(it), b=document.createElement("button");
+    b.type="button"; b.className="clip"+(n||nt?" has":""); b.innerHTML=CLIP+(n?"<span>"+n+"</span>":(nt?'<i class="nd"></i>':""));
+    b.title=[nt?"Note":"",n?n+" attachment"+(n>1?"s":""):""].filter(Boolean).join(" · ")||"Add note or attachment";
     b.addEventListener("click",function(ev){ ev.stopPropagation(); openDrawer(it.id); });
     return b;
   }
@@ -1548,7 +1554,7 @@
     save(); render();
   }
   function openDrawer(id){ drawerFor=id; el("drawer").hidden=false; renderDrawer(true); }
-  function closeDrawer(){ drawerFor=null; el("drawer").hidden=true; }
+  function closeDrawer(){ var ae=document.activeElement; if(ae&&ae.id==="drNote") ae.blur(); drawerFor=null; el("drawer").hidden=true; }
   function folderLine(){
     var box=el("drFolder"); box.innerHTML="";
     function btn(label,fn){ var b=document.createElement("button"); b.className="ctrl"; b.textContent=label; b.addEventListener("click",fn); box.appendChild(b); }
@@ -1561,12 +1567,13 @@
   function renderDrawer(force){
     if(!drawerFor) return;
     var dr=el("drawer");
-    if(!force&&dr.contains(document.activeElement)&&document.activeElement.tagName==="INPUT") return;
+    if(!force&&dr.contains(document.activeElement)&&/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
     var f=findItem(drawerFor); if(!f){ closeDrawer(); return; }
     var it=f.it, att=attOf(it);
     el("drKicker").textContent=f.ctx.kind==="action"?inum(f.ctx.is)+" · "+secLabel(f.ctx.sk):"Week "+isoWeekNo(fromIso(f.ctx.ws||state.weekStart));
     el("drTitle").textContent=it.title||"Untitled";
     folderLine();
+    var nb=el("drNote"); if(nb.value!==(it.note||"")) nb.value=it.note||""; fitNote();
     var tables=el("drTables"), grid=el("drGrid"), files=el("drFiles"), links=el("drLinks");
     tables.innerHTML=""; grid.innerHTML=""; files.innerHTML=""; links.innerHTML="";
     function rmBtn(a){
@@ -1612,6 +1619,13 @@
         (a.kind==="link"?links:files).appendChild(r);
       }
     });
+  }
+  function fitNote(){ var nb=el("drNote"); nb.style.height="auto"; nb.style.height=Math.max(72,nb.scrollHeight+2)+"px"; }
+  function noteInput(){
+    var f=drawerFor&&findItem(drawerFor); if(!f) return;
+    var v=el("drNote").value;
+    if(v) f.it.note=v; else delete f.it.note;
+    fitNote(); save();
   }
   function openViewer(a){ openAtt(a); }
   function closeViewer(){ var v=el("viewer"); if(v._url){ try{ URL.revokeObjectURL(v._url); }catch(e){} v._url=null; } v.hidden=true; v.innerHTML=""; }
@@ -1727,7 +1741,9 @@
     out.push("## Tasks","");
     var every=allTasks();
     if(!every.length) out.push("_No tasks._");
-    function atts(it,l){ (it.att||[]).forEach(function(a){
+    function atts(it,l){
+      if(hasNote(it)){ var nl=it.note.replace(/\r\n?/g,"\n").replace(/\s+$/,"").split("\n"); out.push(pad(l+1)+"- Note: "+nl[0]); nl.slice(1).forEach(function(x){ out.push(pad(l+2)+x); }); }
+      (it.att||[]).forEach(function(a){
       if(a.kind==="table"){
         out.push(pad(l+1)+"- Table: "+a.title,"");
         a.rows.forEach(function(r,i){
@@ -1736,7 +1752,8 @@
         });
         out.push("");
       } else out.push(pad(l+1)+"- Attachment: "+a.title+(a.url?" <"+a.url+">":(a.file?" (attachments folder: "+a.file+")":" (embedded)")));
-    }); }
+      });
+    }
 
     every.forEach(function(t){ out.push(pad(t.lvl)+"- ["+(t.done?"x":" ")+"] "+(t.title||"(untitled)")+dl(t.dates)); atts(t,t.lvl); });
     out.push("","## Issues","");
@@ -1906,6 +1923,9 @@
     fr.readAsText(f);
   });
   el("drClose").addEventListener("click",closeDrawer);
+  el("drNote").addEventListener("input",noteInput);
+  el("drNote").addEventListener("change",function(){ render(); });
+  el("drNote").addEventListener("keydown",function(ev){ if(ev.key==="Escape"){ ev.preventDefault(); ev.stopPropagation(); this.blur(); } });
   el("drAddLink").addEventListener("click",function(){
     var f=drawerFor&&findItem(drawerFor); if(!f) return;
     if(addLink(f.it,el("drUrl").value)){ el("drUrl").value=""; renderDrawer(true); }

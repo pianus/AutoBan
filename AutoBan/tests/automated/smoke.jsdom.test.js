@@ -53,8 +53,9 @@ const cache = () => JSON.parse(w.localStorage.getItem('wp:cache'));
   const rowOf = t => [...d.querySelectorAll('#mlist .task')].find(r => (r.querySelector('.tt') || {}).textContent === t);
   drag(rowOf('Check coating'), cells()[9]); await sleep(10);
   assert.strictEqual(cells()[9].querySelectorAll('.task').length, 1); pass('list -> calendar date schedules');
+  const at10 = cells()[10].querySelectorAll('.task').length;
   drag(cells()[9].querySelector('.task'), cells()[10]); await sleep(10);
-  assert.ok(cells()[9].querySelectorAll('.task').length === 0 && cells()[10].querySelectorAll('.task').length === 1); pass('date -> date moves');
+  assert.ok(cells()[9].querySelectorAll('.task').length === 0 && cells()[10].querySelectorAll('.task').length === at10 + 1); pass('date -> date moves');
   assert.ok(/AutoBan v1\.\d+\.\d+/.test(d.querySelector('.appver').textContent)); pass('version badge present');
 
   // ---- v1.1 ----
